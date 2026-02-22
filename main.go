@@ -70,3 +70,24 @@ func (app *application) deleteBook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	app.logger.Info("deleteBook handler called", "id", id)
 }
+
+func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	app := &application{
+		logger: logger,
+	}
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /v1/healthcheck",   app.healthcheck)
+	mux.HandleFunc("GET /v1/books",         app.listBooks)
+	mux.HandleFunc("GET /v1/books/{id}",    app.getBook)
+	mux.HandleFunc("POST /v1/books",        app.createBook)
+	mux.HandleFunc("DELETE /v1/books/{id}", app.deleteBook)
+
+	logger.Info("starting server", "addr", ":4000")
+
+	err := http.ListenAndServe(":4000", loggingMiddleware(mux))
+	log.Fatal(err)
+}
